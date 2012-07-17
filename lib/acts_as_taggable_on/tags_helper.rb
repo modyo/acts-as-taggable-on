@@ -15,8 +15,17 @@ module ActsAsTaggableOn
     end
 
     def tag_search
-      @tags = Tag.finder_for_autocomplete(:tag_partial_name => params[:search], :site_id => @site.id)
-      render :layout => false, :partial => "/common/tag_search", :locals => { :tags => @tags }
+
+      tag_partial_name = params[:search]+'%'
+      @tags = ActsAsTaggableOn::Tag.all(:conditions => ["name LIKE ? and site_id = ?" , tag_partial_name, @site.id])
+
+      output = []
+      @tags.each do |t|
+        output << [t.name,t.name,nil,t.name]
+      end
+
+      render :layout => false, :json => output
+
     end
 
   end
