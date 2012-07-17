@@ -306,7 +306,7 @@ module ActsAsTaggableOn::Taggable
           tag_list = tag_list_cache_on(context).uniq
 
           # Find existing tags or create non-existing tags:
-          tags = ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name(tag_list)
+          tags = ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name(site, tag_list)
 
           # Tag objects for currently assigned tags
           current_tags = tags_on(context)

@@ -7,38 +7,39 @@ module ActsAsTaggableOn
     ### ASSOCIATIONS:
 
     has_many :taggings, :dependent => :destroy, :class_name => 'ActsAsTaggableOn::Tagging'
+    belongs_to :site, :class_name => "Site", :foreign_key => "site_id"
 
     ### VALIDATIONS:
 
     validates_presence_of :name
-    validates_uniqueness_of :name
+    validates_uniqueness_of :name, :scope => 'site_id'
     validates_length_of :name, :maximum => 255
 
     ### SCOPES:
 
-    def self.named(name)
-      where(["lower(name) = ?", name.downcase])
+    def self.named(name, site)
+      site.tags.where(["lower(name) = ?", name.downcase])
     end
 
-    def self.named_any(list)
-      where(list.map { |tag| sanitize_sql(["lower(name) = ?", tag.to_s.mb_chars.downcase]) }.join(" OR "))
+    def self.named_any(list, site)
+      site.tags.where(list.map { |tag| sanitize_sql(["lower(name) = ?", tag.to_s.mb_chars.downcase]) }.join(" OR "))
     end
 
-    def self.named_like(name)
-      where(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(name)}%"])
+    def self.named_like(name, site)
+      site.tags.where(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(name)}%"])
     end
 
-    def self.named_like_any(list)
-      where(list.map { |tag| sanitize_sql(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(tag.to_s)}%"]) }.join(" OR "))
+    def self.named_like_any(list, site)
+      site.tags.where(list.map { |tag| sanitize_sql(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(tag.to_s)}%"]) }.join(" OR "))
     end
 
     ### CLASS METHODS:
 
-    def self.find_or_create_with_like_by_name(name)
-      named_like(name).first || create(:name => name)
+    def self.find_or_create_with_like_by_name(name, site)
+      named_like(name, site).first || create(:name => name, :site => site)
     end
 
-    def self.find_or_create_all_with_like_by_name(*list)
+    def self.find_or_create_all_with_like_by_name(site, *list)
       list = [list].flatten
 
       return [] if list.empty?

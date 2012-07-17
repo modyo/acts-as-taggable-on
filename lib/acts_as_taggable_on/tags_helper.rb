@@ -13,5 +13,11 @@ module ActsAsTaggableOn
         yield tag, classes[index.nan? ? 0 : index.round]
       end
     end
+
+    def tag_search
+      @tags = Tag.finder_for_autocomplete(:tag_partial_name => params[:search], :site_id => @site.id)
+      render :layout => false, :partial => "/common/tag_search", :locals => { :tags => @tags }
+    end
+
   end
 end
