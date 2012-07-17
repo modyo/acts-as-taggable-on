@@ -104,9 +104,9 @@ module ActsAsTaggableOn::Taggable
         elsif options.delete(:any)
           # get tags, drop out if nothing returned (we need at least one)
           if options.delete(:wild)
-            tags = ActsAsTaggableOn::Tag.named_like_any(tag_list)
+            tags = ActsAsTaggableOn::Tag.named_like_any(tag_list, site)
           else
-            tags = ActsAsTaggableOn::Tag.named_any(tag_list)
+            tags = ActsAsTaggableOn::Tag.named_any(tag_list, site)
           end
 
           return scoped(:conditions => "1 = 0") unless tags.length > 0
