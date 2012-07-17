@@ -29,11 +29,11 @@ module ActsAsTaggableOn::Taggable
     end
     
     module InstanceMethods
-      def owner_tags_on(owner, context)
+      def owner_tags_on(owner, context, site)
         if owner.nil?
-          scope = base_tags.where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ?), context.to_s])                    
+          scope = base_tags.where("site_id = #{site.id}").where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ?), context.to_s])
         else
-          scope = base_tags.where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND
+          scope = base_tags.where("site_id = #{site.id}").where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND
                                      #{ActsAsTaggableOn::Tagging.table_name}.tagger_id = ? AND
                                      #{ActsAsTaggableOn::Tagging.table_name}.tagger_type = ?), context.to_s, owner.id, owner.class.to_s])          
         end

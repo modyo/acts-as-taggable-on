@@ -42,7 +42,7 @@ module ActsAsTaggableOn::Taggable
 
     module InstanceMethods
       def matching_contexts_for(search_context, result_context, klass, options = {})
-        tags_to_find = tags_on(search_context).collect { |t| t.name }
+        tags_to_find = tags_on(search_context, site).collect { |t| t.name }
 
         exclude_self = "#{klass.table_name}.#{klass.primary_key} != #{id} AND" if [self.class.base_class, self.class].include? klass
 
@@ -56,7 +56,7 @@ module ActsAsTaggableOn::Taggable
       end
 
       def related_tags_for(context, klass, options = {})
-        tags_to_find = tags_on(context).collect { |t| t.name }
+        tags_to_find = tags_on(context, site).collect { |t| t.name }
 
         exclude_self = "#{klass.table_name}.#{klass.primary_key} != #{id} AND" if [self.class.base_class, self.class].include? klass
 

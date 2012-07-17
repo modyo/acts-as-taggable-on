@@ -218,7 +218,7 @@ module ActsAsTaggableOn::Taggable
 
       def tag_list_cache_on(context)
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context).map(&:name)))
+        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context, site).map(&:name)))
       end
 
       def tag_list_on(context)
@@ -230,12 +230,12 @@ module ActsAsTaggableOn::Taggable
         variable_name = "@all_#{context.to_s.singularize}_list"
         return instance_variable_get(variable_name) if instance_variable_get(variable_name)
 
-        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context).map(&:name)).freeze)
+        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context, site).map(&:name)).freeze)
       end
 
       ##
       # Returns all tags of a given context
-      def all_tags_on(context)
+      def all_tags_on(context, site)
         tag_table_name = ActsAsTaggableOn::Tag.table_name
         tagging_table_name = ActsAsTaggableOn::Tagging.table_name
 
@@ -254,8 +254,8 @@ module ActsAsTaggableOn::Taggable
 
       ##
       # Returns all tags that are not owned of a given context
-      def tags_on(context)
-        scope = base_tags.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
+      def tags_on(context, site)
+        scope = base_tags.where("site_id = #{site.id}").where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
         # when preserving tag order, return tags in created order
         # if we added the order to the association this would always apply
         scope = scope.order("#{ActsAsTaggableOn::Tagging.table_name}.id") if self.class.preserve_tag_order?
@@ -309,7 +309,7 @@ module ActsAsTaggableOn::Taggable
           tags = ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name(site, tag_list)
 
           # Tag objects for currently assigned tags
-          current_tags = tags_on(context)
+          current_tags = tags_on(context, site)
 
           # Tag maintenance based on whether preserving the created order of tags
           if self.class.preserve_tag_order?
