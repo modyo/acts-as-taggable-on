@@ -23,7 +23,6 @@ module ActsAsTaggableOn
     end
 
     def self.named_any(list, site)
-      #where("(#{list.map { |tag| sanitize_sql(['lower(name) = ?', tag.to_s.mb_chars.downcase]) }.join(' OR ')}) AND site_id = #{site.id}")
       where("site_id = #{site.id}").where(list.map { |tag| sanitize_sql(["lower(name) = ?", tag.to_s.mb_chars.downcase]) }.join(" OR "))
     end
 

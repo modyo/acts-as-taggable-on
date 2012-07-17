@@ -218,7 +218,7 @@ module ActsAsTaggableOn::Taggable
 
       def tag_list_cache_on(context)
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context, site).map(&:name)))
+        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context, @site).map(&:name)))
       end
 
       def tag_list_on(context)
