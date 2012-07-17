@@ -18,19 +18,20 @@ module ActsAsTaggableOn
     ### SCOPES:
 
     def self.named(name, site)
-      site.tags.where(["lower(name) = ?", name.downcase])
+      where(["lower(name) = ? and site_id = ?", name.downcase, site.id])
     end
 
     def self.named_any(list, site)
-      site.tags.where(list.map { |tag| sanitize_sql(["lower(name) = ?", tag.to_s.mb_chars.downcase]) }.join(" OR "))
+      #where("(#{list.map { |tag| sanitize_sql(['lower(name) = ?', tag.to_s.mb_chars.downcase]) }.join(' OR ')}) AND site_id = #{site.id}")
+      where("site_id = #{site.id}").where(list.map { |tag| sanitize_sql(["lower(name) = ?", tag.to_s.mb_chars.downcase]) }.join(" OR "))
     end
 
     def self.named_like(name, site)
-      site.tags.where(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(name)}%"])
+      where(["name #{like_operator} ? ESCAPE '!' and site_id = ?", "%#{escape_like(name)}%", site.id])
     end
 
     def self.named_like_any(list, site)
-      site.tags.where(list.map { |tag| sanitize_sql(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(tag.to_s)}%"]) }.join(" OR "))
+      where("site_id = #{site.id}").where(list.map { |tag| sanitize_sql(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(tag.to_s)}%"]) }.join(" OR "))
     end
 
     ### CLASS METHODS:
