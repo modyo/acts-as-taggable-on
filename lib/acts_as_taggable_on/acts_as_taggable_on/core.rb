@@ -104,9 +104,18 @@ module ActsAsTaggableOn::Taggable
         elsif options.delete(:any)
           # get tags, drop out if nothing returned (we need at least one)
           if options.delete(:wild)
+            if options[:without_site].present?
+              tags = ActsAsTaggableOn::Tag.named_like_any_without_site(tag_list)
+            else
+              tags = ActsAsTaggableOn::Tag.named_like_any(tag_list, site)
+            end
             tags = ActsAsTaggableOn::Tag.named_like_any(tag_list, site)
           else
-            tags = ActsAsTaggableOn::Tag.named_any(tag_list, site)
+            if options[:without_site].present?
+              tags = ActsAsTaggableOn::Tag.named_any_without_site(tag_list)
+            else
+              tags = ActsAsTaggableOn::Tag.named_any(tag_list, site)
+            end
           end
 
           return scoped(:conditions => "1 = 0") unless tags.length > 0
@@ -131,7 +140,7 @@ module ActsAsTaggableOn::Taggable
           joins << tagging_join
 
         else
-          tags = ActsAsTaggableOn::Tag.named_any(tag_list)
+          tags = options[:without_site].present? ? ActsAsTaggableOn::Tag.named_any_without_site(tag_list) : ActsAsTaggableOn::Tag.named_any(tag_list, site)
           return empty_result unless tags.length == tag_list.length
 
           tags.each do |tag|

@@ -26,12 +26,20 @@ module ActsAsTaggableOn
       where("site_id = #{site.id}").where(list.map { |tag| sanitize_sql(["lower(name) = ?", tag.to_s.mb_chars.downcase]) }.join(" OR "))
     end
 
+    def self.named_any_without_site(list)
+      where(list.map { |tag| sanitize_sql(["lower(name) = ?", tag.to_s.mb_chars.downcase]) }.join(" OR "))
+    end
+
     def self.named_like(name, site)
       where(["name #{like_operator} ? ESCAPE '!' and site_id = ?", "%#{escape_like(name)}%", site.id])
     end
 
     def self.named_like_any(list, site)
       where("site_id = #{site.id}").where(list.map { |tag| sanitize_sql(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(tag.to_s)}%"]) }.join(" OR "))
+    end
+
+    def self.named_like_any_without_site(list)
+      where(list.map { |tag| sanitize_sql(["name #{like_operator} ? ESCAPE '!'", "%#{escape_like(tag.to_s)}%"]) }.join(" OR "))
     end
 
     ### CLASS METHODS:
@@ -47,9 +55,9 @@ module ActsAsTaggableOn
 
       existing_tags = Tag.named_any(list, site).all
       new_tag_names = list.reject do |name|
-                        name = comparable_name(name)
-                        existing_tags.any? { |tag| comparable_name(tag.name) == name }
-                      end
+        name = comparable_name(name)
+        existing_tags.any? { |tag| comparable_name(tag.name) == name }
+      end
       created_tags  = new_tag_names.map { |name| Tag.create(:name => name, :site => site) }
 
       existing_tags + created_tags
@@ -71,9 +79,9 @@ module ActsAsTaggableOn
 
     class << self
       private
-        def comparable_name(str)
-          str.mb_chars.downcase.to_s
-        end
+      def comparable_name(str)
+        str.mb_chars.downcase.to_s
+      end
     end
   end
 end
