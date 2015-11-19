@@ -131,6 +131,7 @@ module ActsAsTaggableOn::Taggable
           joins << tagging_join
 
         else
+          Rails.logger.debug "ACA ESTOY EN EL TAG CORE, #{self.inspect}"
           tags = ActsAsTaggableOn::Tag.named_any(tag_list, account)
           return empty_result unless tags.length == tag_list.length
 
