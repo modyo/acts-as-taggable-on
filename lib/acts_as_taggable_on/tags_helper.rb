@@ -17,7 +17,7 @@ module ActsAsTaggableOn
     def tag_search
 
       tag_partial_name = params[:search]+'%'
-      @tags = ActsAsTaggableOn::Tag.all(:conditions => ["name LIKE ? and site_id = ?" , tag_partial_name, @site.id])
+      @tags = ActsAsTaggableOn::Tag.all(:conditions => ["name LIKE ? and account_id = ?" , tag_partial_name, @account.id])
 
       output = []
       @tags.each do |t|

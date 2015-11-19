@@ -78,9 +78,9 @@ module ActsAsTaggableOn::Taggable
       #   User.tagged_with("awesome", "cool", :any => true)       # Users that are tagged with awesome or cool
       #   User.tagged_with("awesome", "cool", :match_all => true) # Users that are tagged with just awesome and cool
       #   User.tagged_with("awesome", "cool", :owned_by => foo ) # Users that are tagged with just awesome and cool by 'foo'
-      def tagged_with(tags, options = { })
+      def tagged_with(tags, options = {})
         tag_list = ActsAsTaggableOn::TagList.from(tags)
-        empty_result = scoped(:conditions => "1 = 0")
+        empty_result = scoped(:conditions => '1 = 0')
 
         return empty_result if tag_list.empty?
 
@@ -94,9 +94,9 @@ module ActsAsTaggableOn::Taggable
 
         if options.delete(:exclude)
           if options.delete(:wild)
-            tags_conditions = tag_list.map { |t| sanitize_sql(["#{ActsAsTaggableOn::Tag.table_name}.name #{like_operator} ? ESCAPE '!'", "%#{escape_like(t)}%"]) }.join(" OR ")
+            tags_conditions = tag_list.map { |t| sanitize_sql(["#{ActsAsTaggableOn::Tag.table_name}.name #{like_operator} ? ESCAPE '!'", "%#{escape_like(t)}%"]) }.join(' OR ')
           else
-            tags_conditions = tag_list.map { |t| sanitize_sql(["#{ActsAsTaggableOn::Tag.table_name}.name #{like_operator} ?", t]) }.join(" OR ")
+            tags_conditions = tag_list.map { |t| sanitize_sql(["#{ActsAsTaggableOn::Tag.table_name}.name #{like_operator} ?", t]) }.join(' OR ')
           end
 
           conditions << "#{table_name}.#{primary_key} NOT IN (SELECT #{ActsAsTaggableOn::Tagging.table_name}.taggable_id FROM #{ActsAsTaggableOn::Tagging.table_name} JOIN #{ActsAsTaggableOn::Tag.table_name} ON #{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key} AND (#{tags_conditions}) WHERE #{ActsAsTaggableOn::Tagging.table_name}.taggable_type = #{quote_value(base_class.name)})"
@@ -104,21 +104,12 @@ module ActsAsTaggableOn::Taggable
         elsif options.delete(:any)
           # get tags, drop out if nothing returned (we need at least one)
           if options.delete(:wild)
-            if options[:without_site].present?
-              tags = ActsAsTaggableOn::Tag.named_like_any_without_site(tag_list)
-            else
-              tags = ActsAsTaggableOn::Tag.named_like_any(tag_list, site)
-            end
-            tags = ActsAsTaggableOn::Tag.named_like_any(tag_list, site)
+            tags = ActsAsTaggableOn::Tag.named_like_any(tag_list, account)
           else
-            if options[:without_site].present?
-              tags = ActsAsTaggableOn::Tag.named_any_without_site(tag_list)
-            else
-              tags = ActsAsTaggableOn::Tag.named_any(tag_list, site)
-            end
+            tags = ActsAsTaggableOn::Tag.named_any(tag_list, account)
           end
 
-          return scoped(:conditions => "1 = 0") unless tags.length > 0
+          return scoped(:conditions => '1 = 0') unless tags.length > 0
 
           # setup taggings alias so we can chain, ex: items_locations_taggings_awesome_cool_123
           # avoid ambiguous column name
@@ -140,7 +131,7 @@ module ActsAsTaggableOn::Taggable
           joins << tagging_join
 
         else
-          tags = options[:without_site].present? ? ActsAsTaggableOn::Tag.named_any_without_site(tag_list) : ActsAsTaggableOn::Tag.named_any(tag_list, site)
+          tags = ActsAsTaggableOn::Tag.named_any(tag_list, account)
           return empty_result unless tags.length == tag_list.length
 
           tags.each do |tag|
@@ -227,7 +218,7 @@ module ActsAsTaggableOn::Taggable
 
       def tag_list_cache_on(context)
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context, @site).map(&:name)))
+        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context, @account).map(&:name)))
       end
 
       def tag_list_on(context)
@@ -239,12 +230,12 @@ module ActsAsTaggableOn::Taggable
         variable_name = "@all_#{context.to_s.singularize}_list"
         return instance_variable_get(variable_name) if instance_variable_get(variable_name)
 
-        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context, site).map(&:name)).freeze)
+        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context, account).map(&:name)).freeze)
       end
 
       ##
       # Returns all tags of a given context
-      def all_tags_on(context, site)
+      def all_tags_on(context, account)
         tag_table_name = ActsAsTaggableOn::Tag.table_name
         tagging_table_name = ActsAsTaggableOn::Tagging.table_name
 
@@ -263,7 +254,7 @@ module ActsAsTaggableOn::Taggable
 
       ##
       # Returns all tags that are not owned of a given context
-      def tags_on(context, site)
+      def tags_on(context, account)
         scope = base_tags.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
         # when preserving tag order, return tags in created order
         # if we added the order to the association this would always apply
@@ -315,10 +306,10 @@ module ActsAsTaggableOn::Taggable
           tag_list = tag_list_cache_on(context).uniq
 
           # Find existing tags or create non-existing tags:
-          tags = ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name(site, tag_list)
+          tags = ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name(account, tag_list)
 
           # Tag objects for currently assigned tags
-          current_tags = tags_on(context, site)
+          current_tags = tags_on(context, account)
 
           # Tag maintenance based on whether preserving the created order of tags
           if self.class.preserve_tag_order?
