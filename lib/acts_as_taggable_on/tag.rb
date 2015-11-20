@@ -9,6 +9,7 @@ module ActsAsTaggableOn
 
     has_many :taggings, :dependent => :destroy, :class_name => 'ActsAsTaggableOn::Tagging'
     belongs_to :account, :class_name => 'Account', :foreign_key => 'account_id'
+    belongs_to :site, :class_name => 'Site', :foreign_key => 'site_id'
 
     ### VALIDATIONS:
 
