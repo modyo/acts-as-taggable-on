@@ -84,6 +84,10 @@ module ActsAsTaggableOn::Taggable
 
         return empty_result if tag_list.empty?
 
+        unless account
+          account = options[:account] if options[:account]
+        end
+
         joins = []
         conditions = []
 
